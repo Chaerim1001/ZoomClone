@@ -18,4 +18,12 @@ const server = http.createServer(app);
 //create webSocket server
 const wss = new WebSocket.Server({ server });
 
+function handleConnection(socket) {
+    console.log(socket);
+}
+
+// on method는 socket에 연결된 사람의 정보를 제공해준다.
+// socket은 서버와 브라우저 사이의 연결!
+wss.on("connection", handleConnection);
+
 server.listen(3000, handleListen);
