@@ -1,40 +1,23 @@
-const messageList = document.querySelector("ul");
-const nickForm = document.querySelector("#nick");
-const messageForm = document.querySelector("#message");
+//io: 자동적으로 백엔드 socket.io와 연결해주는 함수
+const socket = io();
+
+const welcome = document.getElementById("welcome");
+const form = welcome.querySelector("form");
 
 
-function makeMessage(type, payload){
-    const msg = {type, payload};
-    return JSON.stringify(msg);
-}
-//app.js에서 socket은 서버로의 연결을 의미!
-const socket = new WebSocket(`ws://${window.location.host}`);
+function backendDone(msg){
+    console.log(`The backend says: `, msg);
+};
 
-socket.addEventListener("open", () => {
-    console.log("Connected to Server ✔️");
-});
-
-socket.addEventListener("message", (message) => {
-    const li = document.createElement("li");
-    li.innerText = message.data;
-    messageList.append(li);
-    console.log("New message:", message.data);
-});
-
-socket.addEventListener("close", () => {
-    console.log("Disconnected from Server ❌");
-});
-
-messageForm.addEventListener("submit", (event) => {
+function handleRoomSubmit(event){
     event.preventDefault();
-    const input = messageForm.querySelector("input");
-    socket.send(makeMessage("new_message", input.value));
+    const input = form.querySelector("input");
+    
+    //emit(이벤트이름, 보내고싶은 데이터, .... ,서버에서 실행할 함수)
+    //서버에서 실행할 함수는 반드시 마지막 인자로 보내줘야 함
+    socket.emit("enter_room", input.value, backendDone);
     input.value = "";
-});
+};  
 
-nickForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const input = nickForm.querySelector("input");
-    socket.send(makeMessage("nickname", input.value));
-    input.value = "";
-});
+
+form.addEventListener("submit", handleRoomSubmit);

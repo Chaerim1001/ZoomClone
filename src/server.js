@@ -1,5 +1,5 @@
 import http from "http";
-import WebSocket from "ws";
+import SocketIO from "socket.io";
 import express from "express";
 
 const app = express();
@@ -13,11 +13,25 @@ app.get("/*", (req, res) => res.redirect("/"));
 const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
 //create http server 
-const server = http.createServer(app);
+const httpServer = http.createServer(app);
+
+//create socketio server
+const wsServer = SocketIO(httpServer);
+
+wsServer.on("connection", (socket) => {
+    socket.on("enter_room", (roomName, done) => { // done: front의 emit 함수의 세번째 인자
+        console.log(roomName);
+        setTimeout(() =>{
+            done("hello from the backend"); // 서버에서 호출하지만 프론트에서 실행된다.
+        }, 10000);
+    })
+})
+
+
+/* websocket 코드
 
 //create webSocket server
 const wss = new WebSocket.Server({ server });
-
 const sockets = [];
 
 // on method는 socket에 연결된 사람의 정보를 제공해준다.
@@ -42,10 +56,9 @@ wss.on("connection", (socket) => {
             case "nickname": 
                 socket["nickname"] = message.payload;
                 break
-        }
- 
+         }
     });
+ }); 
+ */
 
-});
-
-server.listen(3000, handleListen);
+ httpServer.listen(3000, handleListen);
