@@ -19,11 +19,16 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
+    
+    socket.onAny((event) => {
+        console.log(`Socket Event: ${event}`);
+    });
+    
     socket.on("enter_room", (roomName, done) => { // done: front의 emit 함수의 세번째 인자
-        console.log(roomName);
-        setTimeout(() =>{
-            done("hello from the backend"); // 서버에서 호출하지만 프론트에서 실행된다.
-        }, 10000);
+
+        socket.join(roomName);
+        done();
+
     })
 })
 
