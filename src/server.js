@@ -28,7 +28,18 @@ wsServer.on("connection", (socket) => {
 
         socket.join(roomName);
         done();
+        socket.to(roomName).emit("welcome"); // 참여했다는걸 방안에 있는 (나를 제외한) 모두들에게 보냄
+    });
 
+    socket.on("new_message", (msg, roomName, done) => {
+        socket.to(roomName).emit("new_message", msg);
+        done();
+    });
+
+    socket.on("disconnecting", () => { //disconnecting: 접속을 중단할거긴 하지만 아직 방을 완전히 나가지는 않은 상태
+        socket.rooms.forEach(room => {
+            socket.to(room).emit("bye");
+        });
     })
 })
 
