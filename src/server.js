@@ -18,6 +18,27 @@ const httpServer = http.createServer(app);
 //create socketio server
 const wsServer = SocketIO(httpServer);
 
+
+function publicRooms(){
+    //const sids = wsServer.sockets.adapter.sids;
+    //const rooms = wsServer.sockets.adapter.rooms; 와 밑의 코드는 같은 코드
+    const {
+        sockets: {
+            adapter: {sids, rooms},
+        },
+    } = wsServer;
+   
+    const publicRooms = [];
+    
+    rooms.forEach((_, key) => {
+        if(sids.get(key) === undefined){
+            publicRooms.push(key);
+        }
+    });
+    return publicRooms;
+};
+
+
 wsServer.on("connection", (socket) => {
     socket["nickname"] = "Anon";
 
@@ -30,6 +51,7 @@ wsServer.on("connection", (socket) => {
         socket.join(roomName);
         done();
         socket.to(roomName).emit("welcome", socket.nickname); // 참여했다는걸 방안에 있는 (나를 제외한) 모두들에게 보냄
+        wsServer.sockets.emit("room_change", publicRooms()); 
     });
 
     socket.on("new_message", (msg, roomName, done) => {
@@ -44,13 +66,16 @@ wsServer.on("connection", (socket) => {
     socket.on("disconnecting", () => { //disconnecting: 접속을 중단할거긴 하지만 아직 방을 완전히 나가지는 않은 상태
         socket.rooms.forEach(room => {
             socket.to(room).emit("bye", socket.nickname);
-        });
-    })
+        });  
+    });
+
+    socket.on("disconnect",() => {
+        wsServer.sockets.emit("room_change", publicRooms());
+    });
 })
 
 
 /* websocket 코드
-
 //create webSocket server
 const wss = new WebSocket.Server({ server });
 const sockets = [];
