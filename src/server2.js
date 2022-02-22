@@ -1,7 +1,7 @@
 import http from "http";
-import {Server} from "socket.io";
-import {instrument} from "@socket.io/admin-ui";
+import SocketIO from "socket.io"
 import express from "express";
+import { doesNotMatch } from "assert";
 
 const app = express();
 
@@ -15,17 +15,14 @@ const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
 //create http server 
 const httpServer = http.createServer(app);
+const wsServer = SocketIO(httpServer);
 
-//create socketio server
-const wsServer = new Server(httpServer, {
-    cors: {
-        origin: ["https://admin.socket.io"],
-        credentials: true,
-    },
-});
-
-instrument(wsServer, {
-    auth: false,
-});
+wsServer.on("connection", (socket) => {
+    socket.on("join_room", (roomName,done) => {
+        socket.join(roomName);
+        done();
+        socket.to(roomName).emit("welcome");
+    })
+})
 
  httpServer.listen(3000, handleListen);
